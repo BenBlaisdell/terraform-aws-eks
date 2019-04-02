@@ -8,30 +8,9 @@ resource "aws_autoscaling_group" "workers_launch_template" {
   force_delete      = "${lookup(var.worker_groups_launch_template[count.index], "asg_force_delete", local.workers_group_launch_template_defaults["asg_force_delete"])}"
   target_group_arns = ["${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "target_group_arns", ""), local.workers_group_launch_template_defaults["target_group_arns"])))}"]
 
-  mixed_instances_policy {
-    instances_distribution {
-      on_demand_allocation_strategy            = "${lookup(var.worker_groups_launch_template[count.index], "on_demand_allocation_strategy", local.workers_group_launch_template_defaults["on_demand_allocation_strategy"])}"
-      on_demand_base_capacity                  = "${lookup(var.worker_groups_launch_template[count.index], "on_demand_base_capacity", local.workers_group_launch_template_defaults["on_demand_base_capacity"])}"
-      on_demand_percentage_above_base_capacity = "${lookup(var.worker_groups_launch_template[count.index], "on_demand_percentage_above_base_capacity", local.workers_group_launch_template_defaults["on_demand_percentage_above_base_capacity"])}"
-      spot_allocation_strategy                 = "${lookup(var.worker_groups_launch_template[count.index], "spot_allocation_strategy", local.workers_group_launch_template_defaults["spot_allocation_strategy"])}"
-      spot_instance_pools                      = "${lookup(var.worker_groups_launch_template[count.index], "spot_instance_pools", local.workers_group_launch_template_defaults["spot_instance_pools"])}"
-      spot_max_price                           = "${lookup(var.worker_groups_launch_template[count.index], "spot_max_price", local.workers_group_launch_template_defaults["spot_max_price"])}"
-    }
-
-    launch_template {
-      launch_template_specification {
-        launch_template_id = "${element(aws_launch_template.workers_launch_template.*.id, count.index)}"
-        version            = "$Latest"
-      }
-
-      override {
-        instance_type = "${lookup(var.worker_groups_launch_template[count.index], "instance_type", local.workers_group_launch_template_defaults["instance_type"])}"
-      }
-
-      override {
-        instance_type = "${lookup(var.worker_groups_launch_template[count.index], "override_instance_type", local.workers_group_launch_template_defaults["override_instance_type"])}"
-      }
-    }
+  launch_template {
+    id      = "${element(aws_launch_template.workers_launch_template.*.id, count.index)}"
+    version = "$$Latest"
   }
 
   vpc_zone_identifier   = ["${split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "subnets", ""), local.workers_group_launch_template_defaults["subnets"]))}"]
